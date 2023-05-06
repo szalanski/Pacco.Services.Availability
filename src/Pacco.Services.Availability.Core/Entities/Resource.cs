@@ -53,5 +53,31 @@ namespace Pacco.Services.Availability.Core.Entities
 
             return resource;
         }
+
+        public void AddReservation(Reservation reservation)
+        {
+            var hasCollidingResrvation = _reservations.Any(HasTheSameReservationDate);
+
+            if (hasCollidingResrvation)
+            {
+                var collidingReservation = _reservations.First(HasTheSameReservationDate);
+                if (collidingReservation.Priority > reservation.Priority)
+                {
+                    throw new CannotExpropriateReservationException(Id, reservation.DateTime.Date);
+                }
+
+                if(_reservations.Remove(reservation)) 
+                {
+                    AddEvent(new ReservationCancelled(this, collidingReservation));
+                }
+            }
+
+            if(_reservations.Add(reservation))
+            {
+                AddEvent(new ReservationAdded(this, reservation));
+            }
+
+            bool HasTheSameReservationDate(Reservation r) => r.DateTime == reservation.DateTime;
+        }
     }
 }
