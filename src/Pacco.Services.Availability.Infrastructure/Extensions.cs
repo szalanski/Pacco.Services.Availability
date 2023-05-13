@@ -1,9 +1,15 @@
 ﻿using Convey;
 using Convey.CQRS.Queries;
+using Convey.Docs.Swagger;
+using Convey.MessageBrokers.CQRS;
+using Convey.MessageBrokers.RabbitMQ;
 using Convey.Persistence.MongoDB;
 using Convey.WebApi;
+using Convey.WebApi.CQRS;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Pacco.Services.Availability.Application.Attributes;
+using Pacco.Services.Availability.Application.Events.External;
 using Pacco.Services.Availability.Core.Repositories;
 using Pacco.Services.Availability.Infrastructure.Exceptions;
 using Pacco.Services.Availability.Infrastructure.Mongo.Documents;
@@ -22,15 +28,23 @@ namespace Pacco.Services.Availability.Infrastructure
                 .AddMongo()
                 .AddMongoRepository<ResourceDocument, Guid>("resources")
                 .AddInMemoryQueryDispatcher()
-                .AddQueryHandlers();
-
+                .AddQueryHandlers()
+                .AddRabbitMq()
+                .AddSwaggerDocs()
+                .AddExceptionToMessageMapper<ExceptionToMessageMapper>()
+                ;
+             
             return builder;
         }
 
         public static IApplicationBuilder UseInfrastructure(this IApplicationBuilder app)
         {
             app.UseErrorHandler()
-                .UseConvey();
+               .UseConvey()
+               .UsePublicContracts<ContractAttribute>()
+               .UseSwaggerDocs()
+               .UseRabbitMq()
+               .SubscribeEvent<SignedUp>();
 
             return app;
         }
