@@ -9,11 +9,14 @@ using Convey.WebApi.CQRS;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Pacco.Services.Availability.Application.Attributes;
+using Pacco.Services.Availability.Application.Events;
 using Pacco.Services.Availability.Application.Events.External;
+using Pacco.Services.Availability.Application.Services;
 using Pacco.Services.Availability.Core.Repositories;
 using Pacco.Services.Availability.Infrastructure.Exceptions;
 using Pacco.Services.Availability.Infrastructure.Mongo.Documents;
 using Pacco.Services.Availability.Infrastructure.Mongo.Repositories;
+using Pacco.Services.Availability.Infrastructure.Services;
 using System;
 
 namespace Pacco.Services.Availability.Infrastructure
@@ -23,6 +26,14 @@ namespace Pacco.Services.Availability.Infrastructure
         public static IConveyBuilder AddInfrastructure(this IConveyBuilder builder)
         {
             builder.Services.AddTransient<IResourcesRepository, ResourcesMongoRepository>();
+            builder.Services.AddTransient<IMessageBroker, MessageBroker>();
+            builder.Services.AddTransient<IEventProcessor, EventProcessor>();
+            builder.Services.AddSingleton<IEventMapper, EventMapper>();
+
+            builder.Services.Scan(s => s.FromAssemblies(AppDomain.CurrentDomain.GetAssemblies()).AddClasses(c => c.AssignableTo(typeof(IDomainEventHandler<>)))
+            .AsImplementedInterfaces()
+            .WithTransientLifetime());
+
 
             builder.AddErrorHandler<ExceptionToResponseMapper>()
                 .AddMongo()
@@ -33,7 +44,7 @@ namespace Pacco.Services.Availability.Infrastructure
                 .AddSwaggerDocs()
                 .AddExceptionToMessageMapper<ExceptionToMessageMapper>()
                 ;
-             
+
             return builder;
         }
 

@@ -1,4 +1,6 @@
 ﻿using Convey.CQRS.Commands;
+using Convey.CQRS.Events;
+using Pacco.Services.Availability.Application.Services;
 using Pacco.Services.Availability.Core.Exceptions;
 using Pacco.Services.Availability.Core.Repositories;
 using Pacco.Services.Availability.Core.ValueObjects;
@@ -9,10 +11,12 @@ namespace Pacco.Services.Availability.Application.Commands.Commands
     public class ReserveResourceHandler : ICommandHandler<ReserveResource>
     {
         private readonly IResourcesRepository _repository;
+        private readonly IEventProcessor _eventProcessor;
 
-        public ReserveResourceHandler(IResourcesRepository repository)
+        public ReserveResourceHandler(IResourcesRepository repository, IEventProcessor eventProcessor)
         {
             _repository = repository;
+            _eventProcessor = eventProcessor;
         }
 
         public async Task HandleAsync(ReserveResource command)
@@ -27,6 +31,7 @@ namespace Pacco.Services.Availability.Application.Commands.Commands
             resource.AddReservation(reservation);
 
             await _repository.UpdateAsync(resource);
+            await _eventProcessor.ProcessAsync(resource.Events);
         }
     }
 }
