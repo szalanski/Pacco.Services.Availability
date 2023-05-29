@@ -1,5 +1,4 @@
 ﻿using Convey.CQRS.Commands;
-using Convey.CQRS.Events;
 using Pacco.Services.Availability.Application.Services;
 using Pacco.Services.Availability.Core.Exceptions;
 using Pacco.Services.Availability.Core.Repositories;

@@ -4,10 +4,8 @@ using Microsoft.Extensions.Logging;
 using Pacco.Services.Availability.Application.Events;
 using Pacco.Services.Availability.Application.Services;
 using Pacco.Services.Availability.Core.Events;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Pacco.Services.Availability.Infrastructure.Services
