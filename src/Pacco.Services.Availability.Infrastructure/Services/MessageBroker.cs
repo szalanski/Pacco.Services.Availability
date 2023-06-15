@@ -15,13 +15,20 @@ namespace Pacco.Services.Availability.Infrastructure.Services
         private readonly IMessageOutbox _outbox;
         private readonly OutboxOptions _outboxOptions;
         private readonly IMessagePropertiesAccessor _propertiesAccessor;
+        private readonly ICorrelationContextAccessor _correlationContextAccessor;
 
-        public MessageBroker(IBusPublisher busPublisher, IMessageOutbox outbox, OutboxOptions outboxOptions, IMessagePropertiesAccessor propertiesAccessor)
+        public MessageBroker(
+            IBusPublisher busPublisher,
+            IMessageOutbox outbox,
+            OutboxOptions outboxOptions,
+            IMessagePropertiesAccessor propertiesAccessor,
+            ICorrelationContextAccessor correlationContextAccessor)
         {
             _busPublisher = busPublisher;
             _outbox = outbox;
             _outboxOptions = outboxOptions;
             _propertiesAccessor = propertiesAccessor;
+            _correlationContextAccessor = correlationContextAccessor;
         }
 
         public Task PublishAsync(params IEvent[] events)
@@ -36,6 +43,8 @@ namespace Pacco.Services.Availability.Infrastructure.Services
 
             var messageProperties = _propertiesAccessor.MessageProperties;
             var originatedMessageId = messageProperties?.MessageId;
+            var correlationId = messageProperties?.CorrelationId;
+            var correlationContext = _correlationContextAccessor.CorrelationContext;
 
             foreach (var @event in events)
             {
@@ -45,10 +54,10 @@ namespace Pacco.Services.Availability.Infrastructure.Services
                 var messageId = Guid.NewGuid().ToString("N");
                 if (_outboxOptions.Enabled)
                 {
-                    await _outbox.SendAsync(@event, originatedMessageId, messageId);
+                    await _outbox.SendAsync(@event, originatedMessageId, messageId, correlationId, messageContext: correlationContext);
                     continue;
                 }
-                await _busPublisher.PublishAsync(@event, messageId);
+                await _busPublisher.PublishAsync(@event, messageId, correlationId, messageContext: correlationContext);
             }
         }
     }

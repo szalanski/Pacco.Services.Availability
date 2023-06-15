@@ -47,6 +47,7 @@ namespace Pacco.Services.Availability.Infrastructure
                 .AddMongoRepository<ResourceDocument, Guid>("resources")
                 .AddInMemoryQueryDispatcher()
                 .AddQueryHandlers()
+                .AddCommandHandlers()
                 .AddRabbitMq()
                 .AddSwaggerDocs()
                 .AddExceptionToMessageMapper<ExceptionToMessageMapper>()
