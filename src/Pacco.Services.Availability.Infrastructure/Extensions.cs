@@ -2,7 +2,10 @@
 using Convey.CQRS.Commands;
 using Convey.CQRS.Events;
 using Convey.CQRS.Queries;
+using Convey.Discovery.Consul;
 using Convey.Docs.Swagger;
+using Convey.HTTP;
+using Convey.LoadBalancing.Fabio;
 using Convey.MessageBrokers.CQRS;
 using Convey.MessageBrokers.Outbox;
 using Convey.MessageBrokers.Outbox.Mongo;
@@ -16,12 +19,14 @@ using Pacco.Services.Availability.Application.Attributes;
 using Pacco.Services.Availability.Application.Events;
 using Pacco.Services.Availability.Application.Events.External;
 using Pacco.Services.Availability.Application.Services;
+using Pacco.Services.Availability.Application.Services.Clients;
 using Pacco.Services.Availability.Core.Repositories;
 using Pacco.Services.Availability.Infrastructure.Decorators;
 using Pacco.Services.Availability.Infrastructure.Exceptions;
 using Pacco.Services.Availability.Infrastructure.Mongo.Documents;
 using Pacco.Services.Availability.Infrastructure.Mongo.Repositories;
 using Pacco.Services.Availability.Infrastructure.Services;
+using Pacco.Services.Availability.Infrastructure.Services.Clients;
 using System;
 
 namespace Pacco.Services.Availability.Infrastructure
@@ -33,6 +38,7 @@ namespace Pacco.Services.Availability.Infrastructure
             builder.Services.AddTransient<IResourcesRepository, ResourcesMongoRepository>();
             builder.Services.AddTransient<IMessageBroker, MessageBroker>();
             builder.Services.AddTransient<IEventProcessor, EventProcessor>();
+            builder.Services.AddTransient<ICustomersServiceClient, CustomerServiceClient>();
             builder.Services.TryDecorate(typeof(ICommandHandler<>), typeof(OutboxCommandHandlerDecorator<>));
             builder.Services.TryDecorate(typeof(IEventHandler<>), typeof(OutboxEventHandlerDecorator<>));
             builder.Services.AddSingleton<IEventMapper, EventMapper>();
@@ -52,6 +58,9 @@ namespace Pacco.Services.Availability.Infrastructure
                 .AddSwaggerDocs()
                 .AddExceptionToMessageMapper<ExceptionToMessageMapper>()
                 .AddMessageOutbox(o => o.AddMongo())
+                .AddHttpClient()
+                .AddConsul()
+                .AddFabio()
                 ;
 
             return builder;
